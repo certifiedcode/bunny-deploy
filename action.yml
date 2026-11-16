@@ -1,0 +1,50 @@
+name: Deploy to Bunny Storage
+description: Upload a repo (or its build output) to a Bunny Storage zone and purge the CDN.
+author: Certified Code
+branding:
+  icon: upload-cloud
+  color: orange
+
+inputs:
+  storage-zone:
+    description: Bunny Storage zone name
+    required: true
+  public-url:
+    description: Public base URL served by the pull zone (e.g. https://js.certifiedcode.io); used for purging
+    required: false
+    default: ""
+  build:
+    description: Shell command to build before uploading (empty = no build)
+    required: false
+    default: ""
+  dir:
+    description: Folder to upload ("." = the repo's tracked files)
+    required: false
+    default: "."
+  full:
+    description: '"true" uploads everything; "auto" = full on manual runs, changed files on pushes'
+    required: false
+    default: auto
+  api-key:
+    description: Bunny account API key (or set the BUNNY_API_KEY environment variable)
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Build
+      if: inputs.build != ''
+      shell: bash
+      run: ${{ inputs.build }}
+    - name: Sync to Bunny Storage
+      shell: bash
+      env:
+        INPUT_ZONE: ${{ inputs.storage-zone }}
+        INPUT_PUBLIC_URL: ${{ inputs.public-url }}
+        INPUT_DIR: ${{ inputs.dir }}
+        INPUT_FULL: ${{ inputs.full }}
+        INPUT_API_KEY: ${{ inputs.api-key }}
+        EVENT_NAME: ${{ github.event_name }}
+        BEFORE_SHA: ${{ github.event.before }}
+      run: python3 "${{ github.action_path }}/sync.py"
