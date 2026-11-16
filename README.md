@@ -47,9 +47,12 @@ jobs:
   the push and purge those URLs. Manual runs upload every tracked file and
   purge nothing (safe for a first sync before switching a pull zone's origin).
   `.github/`, `.gitignore` and `.gitattributes` are never uploaded.
-- **Build mode** (any other `dir`): uploads every file in the folder and purges
-  the pull zone whose hostname matches `public-url`. Files removed from the
-  build stay in storage, so use versioned/hashed file names.
+- **Build mode** (any other `dir`): uploads every file in the folder; on pushes
+  it purges the pull zone whose hostname matches `public-url`. Files removed
+  from the build stay in storage, so use versioned/hashed file names.
+
+Manual runs never purge, so a first sync can't empty a pull zone's cache while
+it still serves another origin.
 
 ## Connect a repo
 

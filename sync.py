@@ -12,6 +12,9 @@ Modes
     purged; manual runs (or full: "true") upload everything.
   build mode (any other dir): uploads every file in the folder. Files that
     disappear from the build are not deleted (use versioned file names).
+
+Purging happens only on pushes: changed URLs in source mode, the whole pull
+zone in build mode. Manual runs never purge.
 """
 import json
 import os
@@ -151,7 +154,11 @@ def main():
     # (build mode). A full source sync purges nothing, so a first upload doesn't
     # empty the live cache.
     headers = {"AccessKey": api_key}
-    if public and build_mode:
+    if event != "push":
+        # Manual runs (first sync, repairs) never purge: the pull zone may still
+        # serve another origin, and a purge then just reloads everything from it.
+        print("Not purging on a manual run", flush=True)
+    elif public and build_mode:
         # Build output has no reliable change list: purge the whole pull zone.
         pz = find_pull_zone_id(api_key, urllib.parse.urlparse(public).hostname or "")
         if pz:
